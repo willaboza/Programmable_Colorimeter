@@ -32,9 +32,19 @@ Teraterm is used as a virtual COM port to interface with the microcontroller, ov
 
 2. Write function to tokenize string.
 
+   Parse user command by:
+   
+   * Storing position of first character in each token
+   * Whether token is a number or a character array
+   * Keeping a count the total number of tokens detected
+
 3. Create the getValue function.
 
+   If token is determined to be a number then call getValue to convert the string into an integer and return it as an unsigned 16-bit integer.
+
 4. Code function for getString.
+
+   If token is determined to be a string the  call getString and return the character array.
 
 5. Create function for isCommand.
 
