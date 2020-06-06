@@ -38,13 +38,17 @@ Teraterm is used as a virtual COM port to interface with the microcontroller, ov
 
 5. Create function for isCommand.
 
+   Function isCommand returns a boolean by parsing each string entered 
+
 6. Illuminate r, g, and b LEDs from PWM 0-->1023 for test purposes.
+
+   Drive up RGB LED from duty cycle of 0 to 1023 on each r, g, and b LED seperately 
 
 7. Calibrate r, g, and b LEDs.
 
    Instructs the hardware to calibrate the white color balance and displays the duty cycle information when complete.
    
-   Ramp up red LED, then green LED, and finally blue LED from 0 to 1023 PWM values. Find the point at which each of the RGB values cross a user defined threshold.
+   Ramp up red LED, then green LED, and finally blue LED from 0 to 1023 PWM values. Plot measured values Find the point at which each of the RGB values crosses a user defined threshold.
 
 8. Trigger Command.
 
@@ -57,11 +61,21 @@ Teraterm is used as a virtual COM port to interface with the microcontroller, ov
    * Blue LED set to PWM<sub>B</sub>
    * Measure light or B<sub>value</sub>
    
-   Then display RGB triplet values on terminal.
+   Then display RGB triplet values on terminal. Display an "error" message if device is not calibrated yet.
 
 9. Support for periodic T command
 
-   Configures the hardware to send an RGB triplet in 8-bit calibrated format every 0.1 x T seconds, where T = 0..255 or off.
+   Configures the hardware to send an RGB triplet in 8-bit calibrated format every 0.1 x T seconds, where T = 0..255 or off. Want a resolution in units of 0.1 seconds and uses Timer1Isr function to achieve this. For example:
+   
+   * periodic 1 --> 100 milliseconds
+   * periodic 100 --> 10 seconds
+   
+   Timer1Isr performs the following steps:
+   
+   * Read Wide Timer 5 (WT5) value
+   * Store value in a global variable
+   * Clear WT5 value
+   * Clear interrupt flag for WT5
 
 10. LED ON|OFF|Sample commands
 
