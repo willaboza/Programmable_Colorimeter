@@ -1,20 +1,20 @@
-# Programmable_Colorimeter
+# Programmable Colorimeter
 
-Overview:
+## Overview:
 
 Project goal is to design a device that can measure, learn, and recognize a given color in the visible portion of the light spectrum.
 
 The intensity of reflected light from a given target color is used to measure its color when the RGB LEDs are on.
 
-Hardware:
+## Hardware:
 
 Two 10x2 headers are used to connect a Texas Instruments TM4C123GH6PM microcontroller to a PC board. An RGB LED, used for illumination, and a TEPT5600 ambient light sensor were then soldered to the PC board. After soldering the RGB LED and TEPT5600 sensor to the PC board they are then wired to pins on the microcontroller. 
 
-Software:
+## Software:
 
 Teraterm is used as a virtual COM port to interface with the microcontroller, over UART0, allowing for transmition/reception of information between the user and device.
 
-Project Steps:
+## Project Steps:
 
 1. Write code for getsUart0 function.
 
