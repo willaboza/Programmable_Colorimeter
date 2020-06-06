@@ -1,7 +1,5 @@
 # Programmable Colorimeter
 
-## Overview:
-
 Project goal is to design a device that can measure, learn, and recognize a given color in the visible portion of the light spectrum.
 
 The intensity of reflected light from a given target color is used to measure its color when the RGB LEDs are on.
@@ -16,7 +14,7 @@ Pin connections for different components connected to the microcontroller are sh
 | :----: | :----: |
 | UART0 RX | PA0 |
 | UART0 TX | PA1 |
-| Green LED (internal) | PF3 |
+| Green Status LED | PF3 |
 | Push Button | PF4 |
 | Red LED (external) | PB5 |
 | Blue LED (external) | PE4 |
@@ -44,20 +42,36 @@ Teraterm is used as a virtual COM port to interface with the microcontroller, ov
 
 7. Calibrate r, g, and b LEDs.
 
+   Instructs the hardware to calibrate the white color balance and displays the duty cycle information when complete.
+
 8. Trigger Command.
 
-9. Support for periodic T command.
+   Configures the hardware to send an RGB triplet immediately.
 
-10. LED ON|OFF|Sample command
+9. Support for periodic T command
+
+   Configures the hardware to send an RGB triplet in 8-bit calibrated format every 0.1 x T seconds, where T = 0..255 or off.
+
+10. LED ON|OFF|Sample commands
+
+    Manipulates green status LED by:
+    
+    * ON - Disabling the green status LED
+    * OFF - Enabling the green status LED
+    * Sample - Blinks the green status LED for each sample taken
 
 11. color N command
 
+    Stores the current color as color reference N (N = 0..15).
+
 12. erase N command
+
+    Erases color reference N (N = 0..15).
 
 13. match E command
 
-Configures the hardware to send an RGB triplet when the Euclidean distance (error) between a sample and one of the color reference (R,G,B) is less than E, where E = 0..255 or off.
+    Configures the hardware to send an RGB triplet when the Euclidean distance (error) between a sample and one of the color reference (R,G,B) is less than E, where E = 0..255 or off.
 
 14. delta D command
 
-Configures the hardware to send an RGB triplet when the RMS average of the RGB triplet vs the long-term average (IIR filtered, alpha = 0.9) changes by more than D, where D = 0..255 or off.
+    Configures the hardware to send an RGB triplet when the RMS average of the RGB triplet vs the long-term average (IIR filtered, alpha = 0.9) changes by more than D, where D = 0..255 or off.
