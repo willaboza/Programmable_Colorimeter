@@ -43,10 +43,21 @@ Teraterm is used as a virtual COM port to interface with the microcontroller, ov
 7. Calibrate r, g, and b LEDs.
 
    Instructs the hardware to calibrate the white color balance and displays the duty cycle information when complete.
+   
+   Ramp up red LED, then green LED, and finally blue LED from 0 to 1023 PWM values. Find the point at which each of the RGB values cross a user defined threshold.
 
 8. Trigger Command.
 
    Configures the hardware to send an RGB triplet immediately.
+   
+   * Red LED set to PWM<sub>R</sub>
+   * Measure light or R<sub>value</sub>
+   * Green LED set to PWM<sub>G</sub>
+   * Measure light or G<sub>value</sub>
+   * Blue LED set to PWM<sub>B</sub>
+   * Measure light or B<sub>value</sub>
+   
+   Then display RGB triplet values on terminal.
 
 9. Support for periodic T command
 
