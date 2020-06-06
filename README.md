@@ -38,11 +38,11 @@ Teraterm is used as a virtual COM port to interface with the microcontroller, ov
 
 5. Create function for isCommand.
 
-   Function isCommand returns a boolean by parsing each string entered 
+   Function isCommand returns a boolean by parsing each string entered and performing a string compare of each token with a string literal passed into isCommand. A comparison will also be performed for the minimum number of arguments expected from the user input versus the number of tokens detected when parsed. If the string literal and token match, as well as the minimum number of arguments expected is greater than or equal to the number passed to isCommand, then a value of True is returned and a match has occured for the command.
 
 6. Illuminate r, g, and b LEDs from PWM 0-->1023 for test purposes.
 
-   Drive up RGB LED from duty cycle of 0 to 1023 on each r, g, and b LED seperately 
+   Drive up RGB LED from duty cycle of 0 to 1023 on each r, g, and b LED seperately and output the uncalibrated, 12-bit, light intensity in tabular form. Use this data and create a plot, in excel, for each of the LEDs.
 
 7. Calibrate r, g, and b LEDs.
 
