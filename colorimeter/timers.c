@@ -17,10 +17,15 @@
 #include "tm4c123gh6pm.h"
 #include "uart0.h"
 #include "gpio.h"
+#include "led.h"
 #include "timers.h"
 
+bool periodicMode = false;
+uint16_t periodicValue = 0;
+int loadValue = 0;
+
 // Function To Initialize Timers
-void initTimer(uint16_t period)
+void initTimer1(uint16_t period)
 {
     // Enable clocks
     SYSCTL_RCGCTIMER_R |= SYSCTL_RCGCTIMER_R4;
@@ -37,7 +42,7 @@ void initTimer(uint16_t period)
 }
 
 // Enter info for  TIMER1 Interrupt Service Routine here
-void timerIsr(void)
+void timer1Isr(void)
 {
     if(periodicMode)
     {

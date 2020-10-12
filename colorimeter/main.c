@@ -24,10 +24,6 @@
 //    LSensor:
 //        AIN0/PE3 is driven by the sensor
 
-//
-// Device Includes, Defines, and Assembler Directives
-//
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -50,9 +46,6 @@
 //
 #define PUSH_BUTTON PORTF,4
 
-//
-// Global Variables
-//
 // Function to Initialize System Clock
 void initHw(void)
 {
@@ -77,6 +70,7 @@ void waitPbPress(void)
     //wait specified time
     waitMicrosecond(10000);
 }
+
 //
 // Start of Main Function
 //
@@ -85,16 +79,17 @@ void main(void){
     // Initialize hardware
     initHw();
     initUart0();
-    initPwm0();
-    initAdc0();
-    // initTimer();
+    // initPwm0();
+    // initAdc0();
+    // initEeprom();
+    // initTimer1();
     // initWatchdog();
 
     // Setup UART0 Baud Rate
     setUart0BaudRate(115200, 40e6);
 
     // Declare Variables
-    USER_INPUT userInput;
+    USER_DATA userInput;
 
     //test red LED at startup
     setRgbColor(1023,0,0);
@@ -334,4 +329,5 @@ void main(void){
         {
             resetUserInput(&userInput);
         }
+    }
 }

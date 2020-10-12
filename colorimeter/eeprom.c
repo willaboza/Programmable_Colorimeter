@@ -17,7 +17,11 @@
 #include "tm4c123gh6pm.h"
 #include "eeprom.h"
 
-STORED_COLORS colors = {0};
+STORED_COLORS color = {0};
+
+int threshold = 0;
+bool validCalibration = false;
+bool calibrateMode = false;
 
 // Function to initialize EEPROM
 void initEeprom(void)

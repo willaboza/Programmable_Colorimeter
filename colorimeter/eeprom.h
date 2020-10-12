@@ -16,6 +16,7 @@
 //
 // Includes and Defines
 //
+#include <stdint.h>
 #include <stdbool.h>
 #include "eeprom.h"
 
@@ -33,9 +34,9 @@ typedef struct _STORED_COLORS {
 extern STORED_COLORS color;
 
 //----- Calibrate Variables ------------
-extern int threshold = 0;
-extern bool validCalibration = false;
-extern bool calibrateMode = false;
+extern int threshold;
+extern bool validCalibration;
+extern bool calibrateMode;
 
 void initEeprom(void);
 void writeEeprom(uint16_t add, uint32_t data);

@@ -14,15 +14,37 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "led.h"
 #include "uart0.h"
 #include "gpio.h"
 #include "pwm0.h"
 #include "adc0.h"
 #include "wait.h"
 #include "eeprom.h"
+#include "led.h"
 
 DELTA_MODE delta = {0};
+
+bool sampleLed = false;
+
+//----- Trigger Variables ---------------
+uint16_t ledRed = 0;
+uint16_t ledGreen = 0;
+uint16_t ledBlue = 0;
+
+//------- Test Variables ---------------
+uint16_t redLedCal[1024] = {0};
+uint16_t greenLedCal[1024] = {0};
+uint16_t blueLedCal[1024] = {0};
+uint16_t rgbLeds[3] = {0};
+bool validTest = false;
+bool printTest = false;
+
+//-------- match E Variables ------------
+uint8_t matchValue = 0;
+float eColor = 0.0;
+bool matchMode = false;
+bool match = false;
+bool testMode = false;
 
 //Return LED Value for Passing to setRgbColor()
 uint16_t getRgbValue(char * buffer)

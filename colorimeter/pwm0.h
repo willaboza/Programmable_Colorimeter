@@ -31,7 +31,7 @@ typedef struct _PWM0_LEDS
     uint8_t blueLed;
 } PWM0_LEDS;
 
-extern PWM0_LEDS pwm0 = {0};
+extern PWM0_LEDS pwm0;
 
 void initPwm0(void);
 void setRgbColor(uint16_t red, uint16_t green, uint16_t blue);

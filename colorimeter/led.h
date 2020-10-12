@@ -26,24 +26,24 @@
 extern bool sampleLed;
 
 //----- Trigger Variables ---------------
-static uint16_t ledRed = 0;
-static uint16_t ledGreen = 0;
-static uint16_t ledBlue = 0;
+extern uint16_t ledRed;
+extern uint16_t ledGreen;
+extern uint16_t ledBlue;
 
 //------- Test Variables ---------------
-static uint16_t redLedCal[1024] = {0};
-static uint16_t greenLedCal[1024] = {0};
-static uint16_t blueLedCal[1024] = {0};
-static uint16_t rgbLeds[3] = {0};
-bool validTest = false;
-bool printTest = false;
+extern uint16_t redLedCal[1024];
+extern uint16_t greenLedCal[1024];
+extern uint16_t blueLedCal[1024];
+extern uint16_t rgbLeds[3];
+extern bool validTest;
+extern bool printTest;
 
 //-------- match E Variables ------------
-uint8_t matchValue = 0;
-float eColor = 0.0;
-bool matchMode = false;
-bool match = false;
-bool testMode = false;
+extern uint8_t matchValue;
+extern float eColor;
+extern bool matchMode;
+extern bool match;
+extern bool testMode;
 
 typedef struct _DELTA_MODE {
     bool mode;

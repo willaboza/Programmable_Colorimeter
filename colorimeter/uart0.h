@@ -13,6 +13,8 @@
 #ifndef UART0_H_
 #define UART0_H_
 
+#include <stdint.h>
+#include <stdbool.h>
 #include "uart0.h"
 
 //
