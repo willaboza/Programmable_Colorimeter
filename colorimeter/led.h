@@ -59,12 +59,12 @@ extern DELTA_MODE delta;
 
 uint16_t getRgbValue(char * buffer);
 void testLED(void);
-void calibrateLed(void);
+void calibrateLed(int threshold);
 void getMeasurement(void);
 void setTriplet(void);
 int normalizeRgbColor(int measurement);
 void deltaD(uint8_t index);
 void euclidNorm(void);
-void rampLed(uint16_t ledCal[], uint16_t leds[]);
+void rampLed(uint16_t ledCal[], uint16_t leds[], uint8_t setLed);
 
 #endif /* LED_H_ */

@@ -50,8 +50,8 @@ void setUart0BaudRate(uint32_t baudRate, uint32_t fcyc)
     UART0_FBRD_R = ((divisorTimes128 + 1) >> 1) & 63;   // set fractional value to round(fract(r)*64)
     UART0_LCRH_R = UART_LCRH_WLEN_8;                    // configure for 8N1 w/ 16-level FIFO
     UART0_CTL_R  = UART_CTL_TXE | UART_CTL_RXE | UART_CTL_UARTEN; // turn-on UART0
-    UART0_IM_R = UART_IM_TXIM;                          // turn-on TX interrupt
-    NVIC_EN0_R |= 1 << (INT_UART0-16);                  // turn-on interrupt 21 (UART0)
+    UART0_IM_R   = UART_IM_TXIM;                        // turn-on TX interrupt
+    NVIC_EN0_R   |= 1 << (INT_UART0-16);                // turn-on interrupt 21 (UART0)
 }
 
 
@@ -161,22 +161,25 @@ bool fullRingBuffer(void)
 void printMainMenu(void)
 {
     sendUart0String("\r\n");
-    sendUart0String("Commands:\r\n");
-    sendUart0String("  reboot\r\n");
-    sendUart0String("  ps\r\n");
-    sendUart0String("  ipcs\r\n");
-    sendUart0String("  kill PID\r\n");
-    sendUart0String("  pi ON|OFF\r\n");
-    sendUart0String("  preempt ON|OFF\r\n");
-    sendUart0String("  sched PRIO|RR\r\n");
-    sendUart0String("  pidof proc_name\r\n");
-    sendUart0String("  run proc_name\r\n");
+    sendUart0String("Commands: \r\n");
+    sendUart0String("    calibrate N\r\n");
+    sendUart0String("    color N\r\n");
+    sendUart0String("    erase N\r\n");
+    sendUart0String("    periodic T\r\n");
+    sendUart0String("    delta D\r\n");
+    sendUart0String("    match E\r\n");
+    sendUart0String("    trigger\r\n");
+    sendUart0String("    button\r\n");
+    sendUart0String("    led OFF|ON|SAMPLE\r\n");
+    sendUart0String("    test\r\n");
+    sendUart0String("    print ON|OFF|COLORS\r\n");
+    sendUart0String("    reboot\r\n");
+    sendUart0String("\r\n");
 }
 
 // Handle UART0 Interrupts
 void uart0Isr(void)
 {
-    sendUart0String("Made it to ISR!\r\n");
     // Writing a 1 to the bits in this register clears the bits in the UARTRIS and UARTMIS registers
     UART0_ICR_R = 0xFFF;
     // Check to see if UART Tx holding register is empty and send next byte of data

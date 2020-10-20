@@ -65,92 +65,98 @@ void testLED(void)
 {
     setRgbColor(0,0,0);
 
-    sendUart0String("wait.... ");
-    sendUart0String("\r\n");
+    sendUart0String("  wait....\r\n");
 
     // Ramp Red LED
-    rampLed(redLedCal, rgbLeds);
+    rampLed(redLedCal, rgbLeds, 0);
 
     // Turn off all LEDs
     setRgbColor(0,0,0);
 
     // Ramp Green LED
-    rampLed(greenLedCal, rgbLeds);
+    rampLed(greenLedCal, rgbLeds, 1);
 
     // Turn off all LEDs
     setRgbColor(0,0,0);
 
     // Ramp Blue LED
-    rampLed(blueLedCal, rgbLeds);
+    rampLed(blueLedCal, rgbLeds, 2);
 
     // Turn off all LEDs
     setRgbColor(0,0,0);
 
-    sendUart0String("\r\n");
     validTest = true;
     testMode = false;
 }
 
 // Function to ramp led from 0 -> 1023
-void rampLed(uint16_t ledCal[], uint16_t leds[])
+void rampLed(uint16_t ledCal[], uint16_t leds[], uint8_t setLed)
 {
     int i, num;
     char buffer[QUEUE_BUFFER_LENGTH];
 
-    //Ramp LED
+    //Ramp Red LED
     for (i = 0; i < 1024; i++)
     {
-         setRgbColor(i, 0, 0);
-         waitMicrosecond(RAMP_SPEED);
-         num = readRawResult();
+        switch(setLed)
+        {
+        case 0:
+            setRgbColor(i, 0, 0);
+            break;
+        case 1:
+            setRgbColor(0, i, 0);
+            break;
+        case 2:
+            setRgbColor(0, 0, i);
+            break;
+        default:
+            break;
+        }
 
-         if(testMode == true)
-         {
-             ledCal[i] = num;
-         }
-         else if(calibrateMode == true && num <= threshold)
-         {
-             leds[0] = i;
-         }
-         else if(calibrateMode == true && num > threshold)
-         {
-             break;
-         }
+        waitMicrosecond(RAMP_SPEED);
+        num = readRawResult();
 
-         if(printTest == true)
-         {
-             //no spaces between the 4 numbers as these are copy and pasted
-             //into excel for plotting purposes.
-             snprintf(buffer, sizeof(buffer), "%d,0,0,%u\r\n", i, num);
-             sendUart0String(buffer);
-             sendUart0String("\r\n");
-         }
+        if(testMode)
+        {
+            ledCal[i] = num;
+        }
+        else if(calibrateMode && num <= threshold)
+        {
+            leds[setLed] = i;
+        }
+        else if(calibrateMode && num > threshold)
+        {
+            break;
+        }
+
+        if(printTest)
+        {
+            //no spaces between the 4 numbers as these are copy and pasted
+            //into excel for plotting purposes.
+            snprintf(buffer, sizeof(buffer), "  %d,%u\r\n", i, num);
+            sendUart0String(buffer);
+        }
     }
 }
 
-void calibrateLed(void)
+void calibrateLed(int threshold)
 {
-    bool ok = true;
     char buffer[QUEUE_BUFFER_LENGTH];
 
-    if(threshold > 4095)
+    if(0 <= threshold && threshold <= 4095)
     {
-        sendUart0String("Threshold Value Outside of Range (0 to 4095).\r\n");
-        ok = false;
+        testLED();
+
+        validCalibration = true;
+
+        snprintf(buffer, sizeof(buffer), "  [PWMr: %u,PWMg: %u,PWMb: %u]\r\n", rgbLeds[0], rgbLeds[1], rgbLeds[2]);
+        sendUart0String(buffer);
     }
     else
     {
-        testLED();
+        sendUart0String("  Threshold NOT in 0 to 4095 range.\r\n");
     }
-    //Set threshold values for R,G, and B if no errors detected.
-    if(ok == true )
-    {
-        validCalibration = true;
 
-        snprintf(buffer, sizeof(buffer), "(PWMr: %u,PWMg: %u,PWMb: %u)\r\n", rgbLeds[0], rgbLeds[1], rgbLeds[2]);
-        sendUart0String(buffer);
-        sendUart0String("\r\n");
-    }
     calibrateMode = false;
 }
 
@@ -189,7 +195,7 @@ void getMeasurement(void)
         if(delta.mode == true)
         {
             // Need to modify index values
-            deltaD(1);
+            deltaD(color.index);
         }
 
         //if match mode is turned on calculate the Euclidean Distance between measured value
@@ -204,9 +210,8 @@ void getMeasurement(void)
 
                     if(eColor < matchValue)
                     {
-                        snprintf(buffer, sizeof(buffer), "color %u\r\n", color.index);
+                        snprintf(buffer, sizeof(buffer), "  color %u\r\n", color.index);
                         sendUart0String(buffer);
-                        sendUart0String("\r\n");
                     }
                 }
             }
@@ -222,18 +227,18 @@ void getMeasurement(void)
         if(delta.mode == true && delta.difference > delta.value)
         {
             //print raw results in comparison
-            snprintf(buffer, sizeof(buffer), "(r: %u,g: %u,b: %u).\r\n", ledRed, ledGreen, ledBlue);
+            snprintf(buffer, sizeof(buffer), "  [r: %u,g: %u,b: %u].\r\n", ledRed, ledGreen, ledBlue);
             sendUart0String(buffer);
-            sendUart0String("\r\n");
         }
         //if not in delta mode print measured values
         else if(!delta.mode)
         {
             //print raw results in comparison
-            snprintf(buffer, sizeof(buffer), "(r: %u,g: %u,b: %u).\r\n", ledRed, ledGreen, ledBlue);
+            snprintf(buffer, sizeof(buffer), "  [r: %u,g: %u,b: %u].\r\n", ledRed, ledGreen, ledBlue);
             sendUart0String(buffer);
-            sendUart0String("\r\n");
         }
+
+        // Turn on-board GREEN LED ON if sampleLED mask is True
         if(sampleLed)
         {
             setPinValue(GREEN_LED, 1);
@@ -241,7 +246,7 @@ void getMeasurement(void)
     }
     else
     {
-        sendUart0String("No valid calibration performed. Please perform calibration.\r\n");
+        sendUart0String("  No calibration performed.\r\n");
     }
 }
 

@@ -18,6 +18,7 @@
 #include "uart0.h"
 #include "gpio.h"
 #include "led.h"
+#include "eeprom.h"
 #include "timers.h"
 
 bool periodicMode = false;
