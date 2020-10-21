@@ -24,10 +24,6 @@
 //    LSensor:
 //        AIN0/PE3 is driven by the sensor
 
-//
-// Device Includes, Defines, and Assembler Directives
-//
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -50,9 +46,6 @@
 //
 #define PUSH_BUTTON PORTF,4
 
-//
-// Global Variables
-//
 // Function to Initialize System Clock
 void initHw(void)
 {
@@ -72,11 +65,12 @@ void initHw(void)
 void waitPbPress(void)
 {
     //wait until push button pressed
-    while(GPIO_PORTF_DATA_R & getPinValue(PUSH_BUTTON));
+    while(getPinValue(PUSH_BUTTON));
 
     //wait specified time
     waitMicrosecond(10000);
 }
+
 //
 // Start of Main Function
 //
@@ -84,17 +78,25 @@ void main(void){
 
     // Initialize hardware
     initHw();
+    initEeprom();
     initUart0();
+    initAdc0();
     initPwm0();
     initAdc0();
-    // initTimer();
+    initTimer1();
     // initWatchdog();
 
     // Setup UART0 Baud Rate
     setUart0BaudRate(115200, 40e6);
 
     // Declare Variables
-    USER_INPUT userInput;
+    USER_DATA userInput = {0};
+
+    // Set variables to correct initial values
+    resetUserInput(&userInput);
+
+    // Load colors stored in EEPROM
+    loadColors();
 
     //test red LED at startup
     setRgbColor(1023,0,0);
@@ -119,7 +121,6 @@ void main(void){
 
     //Print Main Menu
     printMainMenu();
-    sendUart0String("\r\n");
 
     //stay in while loop until program is exited to get next input from the terminal
     while(true)
@@ -127,6 +128,12 @@ void main(void){
         // If User Input detected, then process input
         if(kbhitUart0())
         {
+            // Disable Timer1 if in periodic mode
+            if(periodicMode)
+            {
+                disableIntTimer1();
+            }
+
             // Get User Input
             getsUart0(&userInput);
 
@@ -137,34 +144,44 @@ void main(void){
         // Perform Command from User Input
         if(userInput.endOfString && isCommand(&userInput, "reset", 1))
         {
-            rebootFlag = true; // Set flag for controller reboot
+            // Store Learned Colors in EEPROM before reseting device
+            storeColors();
 
-            resetUserInput(&userInput); // Reset Input from User to Rx Next Command
+            // Set flag for micro-controller reboot
+            rebootFlag = true;
+
+            // Reset Input from User to Rx Next Command
+            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "calibrate", 1))
         {
             // Instructs the hardware to calibrate the white color balance
             // and displays the duty cycle information when complete
+            threshold = getFieldInteger(&userInput, 1);
 
             //turn off periodic mode for calibration command
-            if(periodicMode == true)
+            if(periodicMode)
             {
-                periodicMode = false;   //turn off Timer1Isr
-                sendUart0String("Periodic mode disabled.\r\n");
+                disableIntTimer1();
+                periodicMode = false; //turn off Timer1Isr
+                sendUart0String("  Periodic mode disabled.\r\n");
             }
+
             calibrateMode = true;
-            testMode = false;
-            calibrateLed();
-            printTest = false;
-            setRgbColor(0,0,0);     //turn off LEDs when finished with test
+            // testMode = false;
+            calibrateLed(threshold);
+
+            //turn off LEDs when finished with test
+            setRgbColor(0,0,0);
 
             resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "color", 2))  //Stores the current color as color reference N (N = 0..15)
         {
-            color.index = getFieldInteger(&userInput, 1);
             bool flag = false;
             char buffer[QUEUE_BUFFER_LENGTH];
+
+            color.index = getFieldInteger(&userInput, 1);
 
             //turn deltaMode off to print values when using trigger.
             if(delta.mode)
@@ -174,40 +191,45 @@ void main(void){
             }
             //take measurement and store value
             getMeasurement();
+
             color.redValue[color.index] = ledRed;
             color.greenValue[color.index] = ledGreen;
             color.blueValue[color.index] = ledBlue;
             color.validBit[color.index] = true;
+
             //turn deltaMode back on if it was in that state when entering the command
             if(flag == true)
             {
                 delta.mode = true;
             }
 
-            snprintf(buffer, sizeof(buffer), "color %u stored.\r\n", color.index);
+            snprintf(buffer, sizeof(buffer), "  color %u stored.\r\n", color.index);
             sendUart0String(buffer);
-            sendUart0String("\r\n");
 
             resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "erase", 2)) //Erases color reference N (N = 0..15)
         {
-            color.index = getFieldInteger(&userInput, 1);
+            int index;
             char buffer[QUEUE_BUFFER_LENGTH];
 
+            index = getFieldInteger(&userInput, 1);
+
             //delete color from user input
-            if(color.validBit[color.index] ==  true)
+            if(color.validBit[index])
             {
-                color.validBit[color.index] = false;
+                // Erase color in EEPROM
+                eraseColor(index);
+
+                color.validBit[index] = false;
 
                 //print raw results in comparison
-                snprintf(buffer, sizeof(buffer), "color %u erased.\r\n", color.index);
+                snprintf(buffer, sizeof(buffer), "  color %u erased.\r\n", index);
                 sendUart0String(buffer);
-                sendUart0String("\r\n");
             }
             else
             {
-                sendUart0String("No color stored at position to erase.\r\n");
+                sendUart0String("  NO color to erase.\r\n");
             }
 
             resetUserInput(&userInput);
@@ -219,18 +241,20 @@ void main(void){
 
             if(!validCalibration)
             {
-                sendUart0String("Calibration needs to be completed before entering periodic mode.\r\n");
+                sendUart0String("  NO calibration performed.\r\n");
             }
             else
             {
-                 // Need to modify value entered into periodicT function
-                 periodicT(period);
+                // Need to modify value entered into periodicT function
+                periodicT(period);
             }
 
             resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "delta", 2))
         {
+            uint16_t period = getFieldInteger(&userInput, 1);
+
             // Configures the hardware to send an RGB triplet when the RMS average
             // of the RGB triplet vs the long-term average (IIR filtered, alpha = 0.9)
             // changes by more than D, where D = 0..255 or off
@@ -240,6 +264,8 @@ void main(void){
         }
         else if(userInput.endOfString && isCommand(&userInput, "match", 2))
         {
+            uint16_t period = getFieldInteger(&userInput, 1);
+
             // Configures the hardware to send an RGB triplet when the Euclidean
             // distance (error) between a sample and one of the color reference (R,G,B)
             // is less than E, where E = 0..255 or off
@@ -258,10 +284,11 @@ void main(void){
         {
             delta.mode = false;
             //turn off periodic mode when using trigger command
-            if(periodicMode == true)
+            if(periodicMode)
             {
+                disableIntTimer1();
                 periodicMode = false;   //turn off Timer1Isr
-                sendUart0String("Periodic mode disabled.\r\n");
+                sendUart0String("  Periodic mode disabled.\r\n");
             }
 
             getMeasurement();
@@ -271,17 +298,21 @@ void main(void){
         else if(userInput.endOfString && isCommand(&userInput, "button", 1)) // Configures the hardware to send an RGB triplet when the PB is pressed
         {
             //turn off periodic mode when using button command
-            if(periodicMode == true)
+            if(periodicMode)
             {
+                disableIntTimer1();
                 periodicMode = false;   //turn off Timer1Isr
-                sendUart0String("Periodic mode disabled.\r\n");
+                sendUart0String("  Periodic mode disabled.\r\n");
             }
 
             delta.mode = false;
 
+            sendUart0String("  Press Push Button to Continue.\r\n");
+
             // Wait for PB press
-            sendUart0String("Press Push Button to Continue.\r\n");
             waitPbPress();
+
+            // Get Measurement after PB pressed
             getMeasurement();
 
             resetUserInput(&userInput);
@@ -312,26 +343,50 @@ void main(void){
 
             resetUserInput(&userInput);
         }
-        else if(userInput.endOfString && isCommand(&userInput, "test", 2))
+        else if(userInput.endOfString && isCommand(&userInput, "test", 1))
         {
             //Drives up the LED from a DC of 0 to 255 on red, green, and blue LEDs
             //separately and outputs the uncalibrated 12-bit light intensity in tabular form
 
-            if(periodicMode == true) //turn off periodic mode for test command
+            if(periodicMode) //turn off periodic mode for test command
             {
+                disableIntTimer1();
                 periodicMode = false; //turn off Timer1Isr
-                sendUart0String("Periodic mode disabled.\r\n");
+                sendUart0String("  Periodic mode disabled.\r\n");
             }
+
             calibrateMode = false;
             testMode = true;
             testLED();              //perform test of r,g,b LEDs
-            printTest = false;
             setRgbColor(0,0,0);     //turn off LEDs when finished with test
 
             resetUserInput(&userInput);
         }
-        else if(userInput.endOfString)
+        else if(userInput.endOfString && isCommand(&userInput, "print", 2)) // Manipulate green status LED
+        {
+            char buffer[10];
+
+            getFieldString(&userInput, buffer, 1);
+
+            //Disable the green status LED
+            if(strcmp(buffer, "off") == 0)
+            {
+                printTest = false;
+            }
+            else if(strcmp(buffer, "on") == 0) //Enable the green status LED
+            {
+                printTest = true;
+            }
+            else if(strcmp(buffer, "colors") == 0)
+            {
+                printLearnedColors();
+            }
+
+            resetUserInput(&userInput);
+        }
+        else if(userInput.endOfString) // Reset User Input if NO valid command entered
         {
             resetUserInput(&userInput);
         }
+    }
 }

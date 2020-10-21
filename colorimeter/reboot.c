@@ -37,7 +37,7 @@ void initWatchdog(void)
     WATCHDOG0_CTL_R |= WDT_CTL_INTEN;                    // enable interrupts
     WATCHDOG0_LOCK_R = 0x1ACCE551;                       // lock-out further changes
     WATCHDOG0_ICR_R = 0;                                 // clear any pending interrupt
-    NVIC_EN0_R |= 1 << (INT_WATCHDOG-16);                // turn-on interrupt 34 (WATCHDOG)
+    NVIC_EN0_R |= 1 << (INT_WATCHDOG-16);                // turn-on interrupt 18 (WATCHDOG)
 }
 
 // Function to reset watchdog timer before system reboots

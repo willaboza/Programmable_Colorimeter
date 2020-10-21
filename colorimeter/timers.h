@@ -21,16 +21,18 @@
 //
 // Global Variables
 //
-static bool periodicMode = false;
-static uint16_t periodicValue = 0;
-int loadValue = 0;
+extern bool periodicMode;
+extern uint16_t periodicValue;
+extern int loadValue;
 
 //
 // Definitions
 //
-void initTimer(uint16_t period);
-void timerIsr(void);
+void initTimer1(void);
+void timer1Isr(void);
 uint32_t random32(void);
 void periodicT(uint16_t loadValue);
+void disableIntTimer1(void);
+void enableIntTimer1(uint16_t period);
 
 #endif /* TIMERS_H_ */

@@ -16,7 +16,7 @@
 #include "uart0.h"
 #include "pwm0.h"
 
-// PWM0_LEDS  = {0};
+PWM0_LEDS pwm0  = {0};
 
 void initPwm0(void)
 {

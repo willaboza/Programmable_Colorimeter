@@ -16,8 +16,13 @@
 #include <stdint.h>
 #include "tm4c123gh6pm.h"
 #include "eeprom.h"
+#include "uart0.h"
 
-STORED_COLORS colors = {0};
+STORED_COLORS color = {0};
+
+int threshold = 0;
+bool validCalibration = false;
+bool calibrateMode = false;
 
 // Function to initialize EEPROM
 void initEeprom(void)
@@ -44,16 +49,70 @@ uint32_t readEeprom(uint16_t add)
     return EEPROM_EERDWR_R;
 }
 
-// Function to Retrieve Current Address for Device
-void readEepromAddress(void)
+// Store Color in EEPROM
+void storeColors(void)
 {
-    uint32_t num = 0;
-    if((num = readEeprom(0x0000)) != 0xFFFFFFFF)
+    uint16_t i;
+    for(i = 0; i < 16; i++)
     {
-        //SOURCE_ADDRESS = num; // Retrieve Stored Address From EEPROM
+        if(color.validBit[i])
+        {
+            writeEeprom((16 * i), (uint32_t)color.validBit[i]);
+            writeEeprom((16 * i) + 1, color.redValue[i]);
+            writeEeprom((16 * i) + 2, color.greenValue[i]);
+            writeEeprom((16 * i) + 3, color.blueValue[i]);
+        }
     }
-    else
+}
+
+// Load colors stored in EEPROM
+void loadColors(void)
+{
+    uint32_t num;
+
+    for(int i = 0; i < 16; i++)
     {
-        //SOURCE_ADDRESS = 1; // NO Previous Address Stored in EEPROM, default = 1
+        if((num = readEeprom(16*i)) != 0xFFFFFFFF)
+        {
+            color.validBit[i]   = (bool)num;
+            color.redValue[i]   = readEeprom(16*i + 1);
+            color.greenValue[i] = readEeprom(16*i + 2);
+            color.blueValue[i]  = readEeprom(16*i + 3);
+        }
+    }
+}
+
+// Erase color specified by user
+void eraseColor(int index)
+{
+    int i;
+
+    writeEeprom((16 * index), 0xFFFFFFFF);
+
+    for(i = 1; i < 4; i++)
+    {
+        writeEeprom((16 * index) + i, 0xFFFFFFFF);
+    }
+}
+
+
+// Displays all colors learned by device for user
+void printLearnedColors(void)
+{
+    int i;
+    char buffer[25];
+
+    for(i = 0; i < 16; i++)
+    {
+        if(color.validBit[i])
+        {
+            snprintf(buffer, sizeof(buffer), "  color %u: %u,%u,%u\r\n", i, color.redValue[i], color.greenValue[i], color.blueValue[i]);
+            sendUart0String(buffer);
+        }
+        else
+        {
+            snprintf(buffer, sizeof(buffer), "  color %u: none\r\n", i);
+            sendUart0String(buffer);
+        }
     }
 }

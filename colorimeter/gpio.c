@@ -129,6 +129,10 @@ void selectPinDigitalInput(PORT port, uint8_t pin)
     *p = 1;
     p = (uint32_t*)port + pin + OFS_DATA_TO_AMSEL;
     *p = 0;
+
+    // Added Pull-up resistor for pushbutton
+    p = (uint32_t*)port + pin + OFS_DATA_TO_PUR;
+    *p = 1;
 }
 
 void selectPinDigitalOutput(PORT port, uint8_t pin)

@@ -22,7 +22,7 @@
 void getsUart0(USER_DATA* data)
 {
     uint8_t count;
-    char    c;
+    char c;
 
     count = data->characterCount;
 
@@ -40,18 +40,18 @@ void getsUart0(USER_DATA* data)
     }
     else if ((c == 8 || c == 127) && count > 0) // Decrement count if invalid character entered
     {
-            count--;
-            data->characterCount = count;
+        count--;
+        data->characterCount = count;
     }
     else if (c >= ' ' && c < 127) // Converts capital letter to lower case (if necessary)
     {
         if('A' <= c && c <= 'Z')
         {
-                data->buffer[count] = c + 32;
+            data->buffer[count] = c + 32;
         }
         else
         {
-                data->buffer[count] = c;
+            data->buffer[count] = c;
         }
     }
 }
@@ -67,7 +67,7 @@ void parseFields(USER_DATA* data)
     c = data->buffer[count];
 
     // Check if at end of user input and exit function if so.
-    if(c == '\0' || count == MAX_CHARS)
+    if(c == '\0' || count > MAX_CHARS)
         return;
 
     // Get current Index for field arrays
@@ -75,7 +75,7 @@ void parseFields(USER_DATA* data)
 
     if('a' <= c && c <= 'z') // Verify is character is an alpha (case sensitive)
     {
-        if(data->delimeter == true) // Note: Leave if statement here so else statement is not entered
+        if(data->delimeter)
         {
             data->fieldPosition[fieldIndex] = count;
             data->fieldType[fieldIndex] = 'A';
@@ -85,7 +85,7 @@ void parseFields(USER_DATA* data)
     }
     else if(('0' <= c && c <= '9') || ',' == c ||  c == '.') //Code executes for numerics same as alpha
     {
-        if(data->delimeter == true) // Note: Leave if statement here so else statement is not entered
+        if(data->delimeter)
         {
             data->fieldPosition[fieldIndex] = count;
             data->fieldType[fieldIndex] = 'N';
@@ -99,8 +99,8 @@ void parseFields(USER_DATA* data)
         data->delimeter = true;
     }
 
-    // Increment the count of characters entered by user.
-    data->characterCount = ++count;
+    // Increment the count of characters entered by user
+    data->characterCount++;
 
 }
 
