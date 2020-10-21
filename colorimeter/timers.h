@@ -28,9 +28,11 @@ extern int loadValue;
 //
 // Definitions
 //
-void initTimer1(uint16_t period);
+void initTimer1(void);
 void timer1Isr(void);
 uint32_t random32(void);
 void periodicT(uint16_t loadValue);
+void disableIntTimer1(void);
+void enableIntTimer1(uint16_t period);
 
 #endif /* TIMERS_H_ */

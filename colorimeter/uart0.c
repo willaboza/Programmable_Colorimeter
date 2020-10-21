@@ -182,6 +182,7 @@ void uart0Isr(void)
 {
     // Writing a 1 to the bits in this register clears the bits in the UARTRIS and UARTMIS registers
     UART0_ICR_R = 0xFFF;
+
     // Check to see if UART Tx holding register is empty and send next byte of data
     if((UART0_FR_R & UART_FR_TXFE) && !(emptyRingBuffer()))
     {

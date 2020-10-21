@@ -83,8 +83,8 @@ void main(void){
     initAdc0();
     initPwm0();
     initAdc0();
-    // initTimer1();
-    initWatchdog();
+    initTimer1();
+    // initWatchdog();
 
     // Setup UART0 Baud Rate
     setUart0BaudRate(115200, 40e6);
@@ -128,6 +128,12 @@ void main(void){
         // If User Input detected, then process input
         if(kbhitUart0())
         {
+            // Disable Timer1 if in periodic mode
+            if(periodicMode)
+            {
+                disableIntTimer1();
+            }
+
             // Get User Input
             getsUart0(&userInput);
 
@@ -156,6 +162,7 @@ void main(void){
             //turn off periodic mode for calibration command
             if(periodicMode)
             {
+                disableIntTimer1();
                 periodicMode = false; //turn off Timer1Isr
                 sendUart0String("  Periodic mode disabled.\r\n");
             }
@@ -163,7 +170,6 @@ void main(void){
             calibrateMode = true;
             // testMode = false;
             calibrateLed(threshold);
-            printTest = false;
 
             //turn off LEDs when finished with test
             setRgbColor(0,0,0);
@@ -223,7 +229,7 @@ void main(void){
             }
             else
             {
-                sendUart0String("  No color at position to erase.\r\n");
+                sendUart0String("  NO color to erase.\r\n");
             }
 
             resetUserInput(&userInput);
@@ -239,8 +245,8 @@ void main(void){
             }
             else
             {
-                 // Need to modify value entered into periodicT function
-                 periodicT(period);
+                // Need to modify value entered into periodicT function
+                periodicT(period);
             }
 
             resetUserInput(&userInput);
@@ -278,10 +284,11 @@ void main(void){
         {
             delta.mode = false;
             //turn off periodic mode when using trigger command
-            if(periodicMode == true)
+            if(periodicMode)
             {
+                disableIntTimer1();
                 periodicMode = false;   //turn off Timer1Isr
-                sendUart0String("Periodic mode disabled.\r\n");
+                sendUart0String("  Periodic mode disabled.\r\n");
             }
 
             getMeasurement();
@@ -293,6 +300,7 @@ void main(void){
             //turn off periodic mode when using button command
             if(periodicMode)
             {
+                disableIntTimer1();
                 periodicMode = false;   //turn off Timer1Isr
                 sendUart0String("  Periodic mode disabled.\r\n");
             }
@@ -342,9 +350,11 @@ void main(void){
 
             if(periodicMode) //turn off periodic mode for test command
             {
+                disableIntTimer1();
                 periodicMode = false; //turn off Timer1Isr
                 sendUart0String("  Periodic mode disabled.\r\n");
             }
+
             calibrateMode = false;
             testMode = true;
             testLED();              //perform test of r,g,b LEDs
