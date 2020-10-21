@@ -29,17 +29,6 @@ void initTimer1(void)
     // Enable clocks
     SYSCTL_RCGCTIMER_R |= SYSCTL_RCGCTIMER_R1;
     _delay_cycles(3);
-
-    /*
-    TIMER1_CTL_R   &= ~TIMER_CTL_TAEN;                        // Turn-off timer before reconfiguring
-    TIMER1_CFG_R   = TIMER_CFG_32_BIT_TIMER;                  // Configure as 32-bit timer (A+B)
-    TIMER1_TAMR_R  = TIMER_TAMR_TAMR_CAP | TIMER_TAMR_TACDIR; // Configure for periodic mode (count down)
-    TIMER1_TAILR_R = 4000000;                                 // Set load value to 4,000,000
-    TIMER1_IMR_R   = TIMER_IMR_TATOIM;                        // Turn-on interrupts
-    TIMER1_TAV_R   = 0;
-    NVIC_EN0_R     &= ~(1 << (INT_TIMER1A - INT_GPIOA));      // Turn-off vector number 37, or interrupt 21, (TIMER1A)
-    TIMER1_CTL_R   |= TIMER_CTL_TAEN;                         // Turn-on timer
-    */
 }
 
 // Enter info for  TIMER1 Interrupt Service Routine here

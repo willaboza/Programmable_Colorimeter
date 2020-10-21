@@ -63,7 +63,7 @@ void calibrateLed(int threshold);
 void getMeasurement(void);
 void setTriplet(void);
 int normalizeRgbColor(int measurement);
-void deltaD(uint8_t index);
+void deltaD(void);
 void euclidNorm(void);
 void rampLed(uint16_t ledCal[], uint16_t leds[], uint8_t setLed);
 

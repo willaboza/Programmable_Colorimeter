@@ -90,6 +90,7 @@ void main(void){
     setUart0BaudRate(115200, 40e6);
 
     // Declare Variables
+    uint16_t period = 1;
     USER_DATA userInput = {0};
 
     // Set variables to correct initial values
@@ -151,7 +152,6 @@ void main(void){
             rebootFlag = true;
 
             // Reset Input from User to Rx Next Command
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "calibrate", 1))
         {
@@ -159,22 +159,12 @@ void main(void){
             // and displays the duty cycle information when complete
             threshold = getFieldInteger(&userInput, 1);
 
-            //turn off periodic mode for calibration command
-            if(periodicMode)
-            {
-                disableIntTimer1();
-                periodicMode = false; //turn off Timer1Isr
-                sendUart0String("  Periodic mode disabled.\r\n");
-            }
-
             calibrateMode = true;
-            // testMode = false;
+            testMode = false;
             calibrateLed(threshold);
 
             //turn off LEDs when finished with test
             setRgbColor(0,0,0);
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "color", 2))  //Stores the current color as color reference N (N = 0..15)
         {
@@ -189,6 +179,7 @@ void main(void){
                 delta.mode = false;
                 flag = true;
             }
+
             //take measurement and store value
             getMeasurement();
 
@@ -205,8 +196,6 @@ void main(void){
 
             snprintf(buffer, sizeof(buffer), "  color %u stored.\r\n", color.index);
             sendUart0String(buffer);
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "erase", 2)) //Erases color reference N (N = 0..15)
         {
@@ -231,13 +220,10 @@ void main(void){
             {
                 sendUart0String("  NO color to erase.\r\n");
             }
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "periodic", 2)) // Configures the hardware to send an RGB triplet in 8-bit calibrated format every 0.1 x T seconds, where T = 0..255 or off
         {
-            periodicMode = false;
-            uint16_t period = getFieldInteger(&userInput, 1);
+            period = getFieldInteger(&userInput, 1);
 
             if(!validCalibration)
             {
@@ -248,23 +234,32 @@ void main(void){
                 // Need to modify value entered into periodicT function
                 periodicT(period);
             }
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "delta", 2))
         {
-            uint16_t period = getFieldInteger(&userInput, 1);
+            delta.value = getFieldInteger(&userInput, 1);
+
+            enableIntTimer1(period);
+
+            if(delta.value < 0)
+            {
+                delta.value = 0;
+            }
+            else if(delta.value > 255)
+            {
+                delta.value = 255;
+            }
 
             // Configures the hardware to send an RGB triplet when the RMS average
             // of the RGB triplet vs the long-term average (IIR filtered, alpha = 0.9)
             // changes by more than D, where D = 0..255 or off
             delta.mode = true;
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "match", 2))
         {
-            uint16_t period = getFieldInteger(&userInput, 1);
+            matchValue = getFieldInteger(&userInput, 1);
+
+            enableIntTimer1(period);
 
             // Configures the hardware to send an RGB triplet when the Euclidean
             // distance (error) between a sample and one of the color reference (R,G,B)
@@ -277,34 +272,15 @@ void main(void){
             {
                 matchMode = true;
             }
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "trigger", 1)) // Configures the hardware to send an RGB triplet immediately
         {
             delta.mode = false;
-            //turn off periodic mode when using trigger command
-            if(periodicMode)
-            {
-                disableIntTimer1();
-                periodicMode = false;   //turn off Timer1Isr
-                sendUart0String("  Periodic mode disabled.\r\n");
-            }
 
             getMeasurement();
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "button", 1)) // Configures the hardware to send an RGB triplet when the PB is pressed
         {
-            //turn off periodic mode when using button command
-            if(periodicMode)
-            {
-                disableIntTimer1();
-                periodicMode = false;   //turn off Timer1Isr
-                sendUart0String("  Periodic mode disabled.\r\n");
-            }
-
             delta.mode = false;
 
             sendUart0String("  Press Push Button to Continue.\r\n");
@@ -314,8 +290,6 @@ void main(void){
 
             // Get Measurement after PB pressed
             getMeasurement();
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "led", 2)) // Manipulate green status LED
         {
@@ -340,8 +314,6 @@ void main(void){
             {
                 sampleLed = true;
             }
-
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "test", 1))
         {
@@ -360,7 +332,6 @@ void main(void){
             testLED();              //perform test of r,g,b LEDs
             setRgbColor(0,0,0);     //turn off LEDs when finished with test
 
-            resetUserInput(&userInput);
         }
         else if(userInput.endOfString && isCommand(&userInput, "print", 2)) // Manipulate green status LED
         {
@@ -381,10 +352,22 @@ void main(void){
             {
                 printLearnedColors();
             }
-
-            resetUserInput(&userInput);
         }
-        else if(userInput.endOfString) // Reset User Input if NO valid command entered
+        else if(userInput.endOfString && isCommand(&userInput, "set", 4))
+        {
+            uint16_t red, green, blue;
+
+            // Get RGB values
+            red = getFieldInteger(&userInput, 1);
+            green = getFieldInteger(&userInput, 2);
+            blue = getFieldInteger(&userInput, 3);
+
+            // Set RGB  values
+            setRgbColor(red, green, blue);
+        }
+
+        // Reset user input
+        if(userInput.endOfString)
         {
             resetUserInput(&userInput);
         }
