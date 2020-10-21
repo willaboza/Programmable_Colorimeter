@@ -195,7 +195,7 @@ void getMeasurement(void)
         if(delta.mode == true)
         {
             // Need to modify index values
-            deltaD(color.index);
+            deltaD();
         }
 
         //if match mode is turned on calculate the Euclidean Distance between measured value
@@ -227,14 +227,14 @@ void getMeasurement(void)
         if(delta.mode == true && delta.difference > delta.value)
         {
             //print raw results in comparison
-            snprintf(buffer, sizeof(buffer), "  [r: %u,g: %u,b: %u].\r\n", ledRed, ledGreen, ledBlue);
+            snprintf(buffer, sizeof(buffer), "  %u,%u,%u\r\n", ledRed, ledGreen, ledBlue);
             sendUart0String(buffer);
         }
         //if not in delta mode print measured values
         else if(!delta.mode)
         {
             //print raw results in comparison
-            snprintf(buffer, sizeof(buffer), "  [r: %u,g: %u,b: %u].\r\n", ledRed, ledGreen, ledBlue);
+            snprintf(buffer, sizeof(buffer), "  %u,%u,%u\r\n", ledRed, ledGreen, ledBlue);
             sendUart0String(buffer);
         }
 
@@ -263,7 +263,7 @@ int normalizeRgbColor(int measurement)
     numerator = atof(buffer);
     snprintf(buffer, sizeof(buffer), "%u.0\0",threshold);
     denominator = atof(buffer);
-    ratio = (numerator/denominator) * 255.0;
+    ratio = (numerator / denominator) * 255.0;
     temp = ratio;
 
     if(temp > 255)
@@ -275,15 +275,15 @@ int normalizeRgbColor(int measurement)
 }
 
 //function to set the delta value for displaying measured values when greater than D
-void deltaD(uint8_t index)
+void deltaD(void)
 {
     float avg = 0.0;
 
     delta.methodResult = sqrt((ledRed * ledRed) + (ledGreen * ledGreen) + (ledBlue * ledBlue));
-    delta.sum -= delta.methodValues[index];
+    delta.sum -= delta.methodValues[delta.index];
     delta.sum += delta.methodResult;
-    delta.methodValues[index] = delta.methodResult;
-    index = (index + 1) % 16;
+    delta.methodValues[delta.index] = delta.methodResult;
+    delta.index = ++delta.index % 16;
 
     avg = 0.9*(delta.sum/16) + (0.1 * delta.methodResult);
     delta.difference = abs((int)delta.methodResult - (int)avg);
